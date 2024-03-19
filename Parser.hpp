@@ -5,15 +5,17 @@
 #include <functional>
 
 class IToken;
+using TokenPtr = std::shared_ptr<IToken>;
+
+class Parser;
+using TokenFactory = std::function<TokenPtr (const Parser&, const std::string&, size_t&)>;
 
 class Parser
 {
 public:
-	using TokenPtr = std::shared_ptr<IToken>;
-	using TokenFactory = std::function<TokenPtr ()>;
 	std::vector<TokenFactory> TokenFactories;
 public:
-	virtual void Analyze(const char*, const char*, std::vector<TokenPtr>&);
+	virtual void Analyze(const std::string&, std::vector<TokenPtr>&);
 
 	virtual std::vector<TokenFactory>& GetTokenFactories();
 };
