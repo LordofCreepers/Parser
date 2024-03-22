@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
-#include "TreeNode.hpp"
+#include "Tree.hpp"
 
 class IToken;
 using TokenPtr = std::shared_ptr<IToken>;
@@ -21,16 +21,14 @@ protected:
 	TokenComparator TokenCompare;
 
 	virtual void AddFactory(TokenFactory&&);
-	virtual void SetComparator(TokenComparator&&);
+
+	virtual void SubParse(std::vector<TokenPtr>::const_iterator, std::vector<TokenPtr>::const_iterator, Tree<TokenPtr>::NodePtr&);
 public:
 	virtual void Tokenize(const std::string&, std::vector<TokenPtr>&);
-	virtual void Parse(const std::vector<TokenPtr>&, TreeNode<TokenPtr>&);
+	virtual void Parse(const std::vector<TokenPtr>&, Tree<TokenPtr>&);
 
 	virtual const std::vector<TokenFactory>& GetTokenFactories() const;
-	virtual const TokenComparator& GetTokenComparator() const;
 
 	void AddTokenFactory(const TokenFactory&);
 	void AddTokenFactory(TokenFactory&&);
-	void SetTokenComparator(const TokenComparator&);
-	void SetTokenComparator(TokenComparator&&);
 };
