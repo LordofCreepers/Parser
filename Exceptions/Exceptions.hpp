@@ -19,11 +19,6 @@ public:
 	}
 };
 
-std::ostream& operator<<(std::ostream& output, const SyntaxError& err)
-{
-	return output << err.what() << " at column " << err.GetColumn();
-}
-
 class UnexpectedToken : public SyntaxError
 {
 public:
@@ -36,7 +31,7 @@ public:
 	}
 };
 
-struct IToken;
+class IToken;
 
 class ParsingError : public ExpressionError
 {
