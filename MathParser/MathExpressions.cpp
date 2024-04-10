@@ -1,28 +1,31 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include "Exceptions.hpp"
+#include "../Exceptions/Exceptions.hpp"
 #include "MathExpressions.hpp"
+#include <unordered_set>
 
 void MathExpressions::Token::EvaluateChildren(
     const Tree<TokenPtr>::NodePtr& ast_node,
     std::vector<long double>& out_params,
+    const MathExpressions::Environment& env,
     size_t expected_param_count = 0
 ) const {
     for (const Tree<TokenPtr>::NodePtr& node : ast_node->Children)
     {
         auto token = std::dynamic_pointer_cast<const MathExpressions::Token>(node->Value);
-        if (!token) throw std::exception();
+        if (!token) throw WrongTokenType(node->Value.get());
 
-        out_params.push_back(token->Evaluate(node));
+        out_params.push_back(token->Evaluate(node, env));
     }
 
-    if (expected_param_count && out_params.size() != expected_param_count) throw std::exception();
+    if (expected_param_count && out_params.size() != expected_param_count) 
+        throw UnexpectedSubexpressionCount(expected_param_count, out_params.size());
 }
 
 bool MathExpressions::Token::IsPrecedent(const IToken* other) const
 {
     auto other_met = dynamic_cast<const MathExpressions::Token*>(other);
-    if (!other_met) throw std::exception();
+    if (!other_met) throw WrongTokenType(other);
 
     return GetPriority() > other_met->GetPriority();
 }
@@ -51,24 +54,29 @@ MathExpressions::Number::Number(const std::string& number) : Num(number)
 MathExpressions::Number::Number(std::string&& number) : Num(number)
 {}
 
-long double MathExpressions::Number::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Number::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     return std::stold(Num);
 }
 
-long double MathExpressions::Pythagorean::Evaluate(const Tree<TokenPtr>::NodePtr&) const
+long double MathExpressions::Pythagorean::Evaluate(const Tree<TokenPtr>::NodePtr&, const MathExpressions::Environment&) const
 {
     return M_PI;
 }
 
-long double MathExpressions::ExponentConst::Evaluate(const Tree<TokenPtr>::NodePtr&) const
+long double MathExpressions::ExponentConst::Evaluate(const Tree<TokenPtr>::NodePtr&, const MathExpressions::Environment&) const
 {
     return M_E;
 }
 
-long double MathExpressions::Variable::Evaluate(const Tree<TokenPtr>::NodePtr&) const
+MathExpressions::Variable::Variable(char name) : Name(1, name) {};
+
+long double MathExpressions::Variable::Evaluate(const Tree<TokenPtr>::NodePtr&, const MathExpressions::Environment& env) const
 {
-    return 0.0;
+    Environment::const_iterator var_it = env.find(Name);
+    if (var_it == env.cend()) throw UnresolvedSymbol(this, Name);
+
+    return var_it->second;
 }
 
 void MathExpressions::BinaryOp::SplitPoints(
@@ -79,6 +87,8 @@ void MathExpressions::BinaryOp::SplitPoints(
 {
     out_partition.clear();
 
+    if (expression_range.Start == expression_range.End) return;
+
     out_partition.push_back({ expression_range.Start, current_token });
     out_partition.push_back({ current_token + 1, expression_range.End });
 }
@@ -88,11 +98,11 @@ size_t MathExpressions::Add::GetPriority() const
     return 1;
 }
 
-long double MathExpressions::Add::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Add::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     long double res = 0;
     std::vector<long double> params;
-    EvaluateChildren(node, params);
+    EvaluateChildren(node, params, env);
     
     for (long double param : params)
         res += param;
@@ -105,11 +115,11 @@ size_t MathExpressions::Sub::GetPriority() const
     return 1;
 }
 
-long double MathExpressions::Sub::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Sub::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     long double res = 0;
     std::vector<long double> params;
-    EvaluateChildren(node, params);
+    EvaluateChildren(node, params, env);
 
     for (long double param : params)
         res -= param;
@@ -122,11 +132,11 @@ size_t MathExpressions::Mul::GetPriority() const
     return 2;
 }
 
-long double MathExpressions::Mul::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Mul::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     long double res = 1;
     std::vector<long double> params;
-    EvaluateChildren(node, params);
+    EvaluateChildren(node, params, env);
 
     for (long double param : params)
         res *= param;
@@ -139,15 +149,19 @@ size_t MathExpressions::Div::GetPriority() const
     return 2;
 }
 
-long double MathExpressions::Div::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Div::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     long double res = 0;
     std::vector<long double> params;
-    EvaluateChildren(node, params);
+    EvaluateChildren(node, params, env);
 
     for (size_t i = 0; i < params.size(); i++)
         if (i > 0)
+        {
+            if (params[i] == 0) throw DivisionByZero(this);
+
             res /= params[i];
+        }
         else
             res = params[i];
 
@@ -159,10 +173,10 @@ size_t MathExpressions::Pow::GetPriority() const
     return 3;
 }
 
-long double MathExpressions::Pow::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Pow::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 2);
+    EvaluateChildren(node, params, env, 2);
 
     return powl(params[0], params[1]);
 }
@@ -205,7 +219,7 @@ void MathExpressions::DistinctPair::FindMatchingToken(
         if (Pair->Variant) return;
     }
 
-    throw std::exception();
+    throw NoMatchingToken(this);
 }
 
 MathExpressions::Bracket::Bracket(bool closing) : DistinctPair(closing) {};
@@ -220,10 +234,10 @@ bool MathExpressions::Bracket::IsMatchingToken(const Pair* token) const
     return static_cast<bool>(dynamic_cast<const Bracket*>(token));
 }
 
-long double MathExpressions::Bracket::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Bracket::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return params[0];
 }
@@ -240,7 +254,7 @@ void MathExpressions::IndistinctPair::FindMatchingToken(
         if (Pair && IsMatchingToken(Pair.get())) return;
     }
 
-    throw std::exception();
+    throw NoMatchingToken(this);
 }
 
 size_t MathExpressions::ModBracket::GetPriority() const
@@ -253,10 +267,10 @@ bool MathExpressions::ModBracket::IsMatchingToken(const Pair* Pair) const
     return static_cast<bool>(dynamic_cast<const ModBracket*>(Pair));
 }
 
-long double MathExpressions::ModBracket::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::ModBracket::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return fabsl(params[0]);
 }
@@ -273,26 +287,26 @@ bool MathExpressions::Function::IsMatchingToken(const Pair* pair) const
     return static_cast<bool>(dynamic_cast<const MathExpressions::Bracket*>(pair));
 }
 
-long double MathExpressions::LogarithmE::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::LogarithmE::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return logl(params[0]);
 }
 
-long double MathExpressions::Logarithm2::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Logarithm2::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return log2l(params[0]);
 }
 
-long double MathExpressions::Logarithm10::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Logarithm10::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return log10l(params[0]);
 }
@@ -333,138 +347,140 @@ void MathExpressions::ArgumentedFunction::SplitPoints(
     partitioned_range = new_partitioned_range;
 }
 
-long double MathExpressions::Logarithm::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Logarithm::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 2);
+    EvaluateChildren(node, params, env, 2);
 
     return logl(params[0]) / logl(params[1]);
 }
 
-long double MathExpressions::ExponentFunc::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::ExponentFunc::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return expl(params[0]);
 }
 
-long double MathExpressions::SquareRoot::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::SquareRoot::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
+
+    if (params[0] < 0) throw NegativeNumberRoot(this);
 
     return sqrtl(params[0]);
 }
 
-long double MathExpressions::Sign::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Sign::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return (params[0] == 0) ? 0 : ((params[0] > 0) ? 1 : -1);
 }
 
-long double MathExpressions::Sine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Sine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return sinl(params[0]);
 }
 
-long double MathExpressions::Cosine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Cosine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return cosl(params[0]);
 }
 
-long double MathExpressions::Tangens::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Tangens::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return tanl(params[0]);
 }
 
-long double MathExpressions::Cotangens::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Cotangens::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return 1 / tanl(params[0]);
 }
 
-long double MathExpressions::Arcsine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Arcsine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return asinl(params[0]);
 }
 
-long double MathExpressions::Arccosine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Arccosine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return acosl(params[0]);
 }
 
-long double MathExpressions::Arctangens::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::Arctangens::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return atanl(params[0]);
 }
 
-long double MathExpressions::HyperbolicSine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicSine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return sinhl(params[0]);
 }
 
-long double MathExpressions::HyperbolicCosine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicCosine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return coshl(params[0]);
 }
 
-long double MathExpressions::HyperbolicTangens::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicTangens::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return tanhl(params[0]);
 }
 
-long double MathExpressions::HyperbolicArcsine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicArcsine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return asinhl(params[0]);
 }
 
-long double MathExpressions::HyperbolicArccosine::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicArccosine::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return acoshl(params[0]);
 }
 
-long double MathExpressions::HyperbolicArctangens::Evaluate(const Tree<TokenPtr>::NodePtr& node) const
+long double MathExpressions::HyperbolicArctangens::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
     std::vector<long double> params;
-    EvaluateChildren(node, params, 1);
+    EvaluateChildren(node, params, env, 1);
 
     return atanhl(params[0]);
 }
@@ -744,7 +760,22 @@ static TokenPtr MET_HyperbolicArctangensFactory(const Parser& parser, const std:
 
 static TokenPtr MET_VariableFactory(const Parser& parser, const std::string& in_expr, size_t& cursor)
 {
+    static std::unordered_set<char> allowed_var_names =
+    {
+        'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
+        'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
+        'z', 'x', 'c', 'v', 'b', 'n', 'm'
+    };
 
+    char var_name = in_expr[cursor];
+    if (allowed_var_names.count(var_name))
+    {
+        cursor++;
+
+        return std::make_shared<MathExpressions::Variable>(var_name);
+    }
+
+    return TokenPtr();
 }
 
 template<typename T>
@@ -798,7 +829,7 @@ const std::vector<TokenFactory>& MathExpressions::GetTokenFactories()
         MET_HyperbolicArctangensFactory,
 
         MET_NumberFactory, MET_PythagoreanFactory,
-        MET_ExponentConstFactory
+        MET_ExponentConstFactory, MET_VariableFactory
     };
 
     return ME_Factories;

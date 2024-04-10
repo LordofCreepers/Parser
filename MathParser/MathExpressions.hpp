@@ -3,14 +3,16 @@
 #include <string>
 #include <functional>
 #include <memory>
-#include "Parser.hpp"
-#include "Token.hpp"
-#include "Tree.hpp"
+#include <unordered_map>
+#include "../ParserBase/Parser.hpp"
+#include "../ParserBase/Token.hpp"
+#include "../ParserBase/Tree.hpp"
 
 using TokenFactory = std::function<TokenPtr(const Parser&, const std::string&, size_t&)>;
 
 namespace MathExpressions
 {
+	using Environment = std::unordered_map<std::string, long double>;
 	class ParamSeparator : public IToken
 	{
 		virtual bool IsPrecedent(const IToken*) const override;
@@ -30,11 +32,19 @@ namespace MathExpressions
 	class Token : public IToken
 	{
 	protected:
-		void EvaluateChildren(const Tree<TokenPtr>::NodePtr&, std::vector<long double>&, size_t) const;
+		void EvaluateChildren(
+			const Tree<TokenPtr>::NodePtr&, 
+			std::vector<long double>&,  
+			const Environment&,
+			size_t
+		) const;
 	public:
 		virtual size_t GetPriority() const = 0;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const = 0;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&, 
+			const Environment&
+		) const = 0;
 
 		virtual bool IsPrecedent(const IToken*) const override;
 
@@ -64,29 +74,41 @@ namespace MathExpressions
 		Number(const std::string&);
 		Number(std::string&&);
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Pythagorean : public Numeric
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class ExponentConst : public Numeric
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Variable : public Numeric
 	{
 	protected:
-		char Name;
+		std::string Name;
 	public:
 		Variable(char);
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class BinaryOp : public Token
@@ -106,7 +128,10 @@ namespace MathExpressions
 
 		virtual size_t GetPriority() const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Sub : public BinaryOp
@@ -116,7 +141,10 @@ namespace MathExpressions
 
 		virtual size_t GetPriority() const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Mul : public BinaryOp
@@ -126,7 +154,10 @@ namespace MathExpressions
 
 		virtual size_t GetPriority() const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Div : public BinaryOp
@@ -136,7 +167,10 @@ namespace MathExpressions
 
 		virtual size_t GetPriority() const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Pow : public BinaryOp
@@ -146,7 +180,10 @@ namespace MathExpressions
 
 		virtual size_t GetPriority() const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class Pair : public Token
@@ -195,7 +232,10 @@ namespace MathExpressions
 
 		virtual bool IsMatchingToken(const Pair*) const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(
+			const Tree<TokenPtr>::NodePtr&,
+			const Environment&
+		) const override;
 	};
 
 	class IndistinctPair : public Pair
@@ -214,7 +254,7 @@ namespace MathExpressions
 
 		virtual bool IsMatchingToken(const Pair*) const override;
 
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Function : public DistinctPair
@@ -230,19 +270,19 @@ namespace MathExpressions
 	class LogarithmE : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Logarithm2 : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Logarithm10 : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class ArgumentedFunction : public Function
@@ -258,109 +298,103 @@ namespace MathExpressions
 	class Logarithm : public ArgumentedFunction
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class ExponentFunc : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class SquareRoot : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Sign : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Sine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Cosine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Tangens : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Cotangens : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Arcsine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Arccosine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class Arctangens : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicSine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicCosine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicTangens : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
-	};
-
-	class HyperbolicCotangens : public Function
-	{
-	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicArcsine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicArccosine : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	class HyperbolicArctangens : public Function
 	{
 	public:
-		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&) const override;
+		virtual long double Evaluate(const Tree<TokenPtr>::NodePtr&, const Environment&) const override;
 	};
 
 	const std::vector<TokenFactory>& GetTokenFactories();
