@@ -1,6 +1,6 @@
 #include "Token.hpp"
 #include "Parser.hpp"
-#include "Exceptions.hpp"
+#include "../Exceptions/Exceptions.hpp"
 
 void Parser::AddFactory(TokenFactory&& factory)
 {
@@ -49,7 +49,7 @@ void Parser::Tokenize(const std::string& in_expression, std::vector<TokenPtr>& o
 {
 	out_tokens.clear();
 
-	if (in_expression.empty()) throw EmptyExpression{};
+	if (in_expression.empty()) throw EmptyExpression();
 
 	size_t token_start_pointer = 0;
 
@@ -68,7 +68,7 @@ void Parser::Tokenize(const std::string& in_expression, std::vector<TokenPtr>& o
 			}
 		}
 
-		if (!factory_ptr) throw std::exception();
+		if (!factory_ptr) throw UnexpectedToken(token_start_pointer);
 	}
 }
 
