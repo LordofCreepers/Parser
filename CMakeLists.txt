@@ -4,5 +4,5 @@ project("Parser")
 
 add_library(Parser
 	"ParserBase/Parser.cpp"
-	"MathExpressions/MathExpressions.cpp"
+	"MathParser/MathExpressions.cpp"
 )
