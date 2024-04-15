@@ -117,12 +117,12 @@ size_t MathExpressions::Sub::GetPriority() const
 
 long double MathExpressions::Sub::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
-    long double res = 0;
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    for (long double param : params)
-        res -= param;
+    long double res = params[0];
+    for (size_t i = 1; i < params.size(); i++)
+        res -= params[i];
 
     return res;
 }
@@ -151,19 +151,15 @@ size_t MathExpressions::Div::GetPriority() const
 
 long double MathExpressions::Div::Evaluate(const Tree<TokenPtr>::NodePtr& node, const MathExpressions::Environment& env) const
 {
-    long double res = 0;
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    for (size_t i = 0; i < params.size(); i++)
-        if (i > 0)
-        {
-            if (params[i] == 0) throw DivisionByZero(this);
-
-            res /= params[i];
-        }
-        else
-            res = params[i];
+    long double res = params[0];
+    for (size_t i = 1; i < params.size(); i++)
+    {
+        if (params[i] == 0) throw DivisionByZero(this);
+        res /= params[i];
+    }
 
     return res;
 }
