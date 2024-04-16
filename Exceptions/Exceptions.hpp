@@ -77,13 +77,13 @@ public:
 	}
 };
 
-class UnexpectedSubexpressionCount : public ExpressionError
+class UnexpectedSubexpressionCount : public ParsingError
 {
 protected:
 	size_t CurCount, ExpCount;
 public:
-	UnexpectedSubexpressionCount(size_t cur_count, size_t exp_count) 
-		: CurCount(cur_count), ExpCount(exp_count)
+	UnexpectedSubexpressionCount(const IToken* token, size_t cur_count, size_t exp_count)
+		: CurCount(cur_count), ExpCount(exp_count), ParsingError(token)
 	{};
 
 	virtual const char* what() const override
