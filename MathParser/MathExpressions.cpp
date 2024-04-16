@@ -103,6 +103,8 @@ long double MathExpressions::Add::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     long double res = 0;
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
+
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
     
     for (long double param : params)
         res += param;
@@ -119,6 +121,8 @@ long double MathExpressions::Sub::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
 {
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
+
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
 
     long double res = params[0];
     for (size_t i = 1; i < params.size(); i++)
@@ -138,6 +142,8 @@ long double MathExpressions::Mul::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
+
     for (long double param : params)
         res *= param;
 
@@ -153,6 +159,8 @@ long double MathExpressions::Div::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
 {
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
+
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
 
     long double res = params[0];
     for (size_t i = 1; i < params.size(); i++)
