@@ -31,6 +31,18 @@ public:
 	}
 };
 
+class IncorrectlyFormedNumber : public SyntaxError
+{
+public:
+	IncorrectlyFormedNumber(size_t column) : SyntaxError(column) {};
+
+	virtual const char* what() const override
+	{
+		static const char err[] = "Incorrectly formed number";
+		return err;
+	}
+};
+
 class IToken;
 
 class ParsingError : public ExpressionError
