@@ -19,7 +19,7 @@ void MathExpressions::Token::EvaluateChildren(
     }
 
     if (expected_param_count && out_params.size() != expected_param_count) 
-        throw UnexpectedSubexpressionCount(expected_param_count, out_params.size());
+        throw UnexpectedSubexpressionCount(this, expected_param_count, out_params.size());
 }
 
 bool MathExpressions::Token::IsPrecedent(const IToken* other) const
@@ -104,7 +104,7 @@ long double MathExpressions::Add::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(this, params.size(), 2);
     
     for (long double param : params)
         res += param;
@@ -122,7 +122,7 @@ long double MathExpressions::Sub::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(this, params.size(), 2);
 
     long double res = params[0];
     for (size_t i = 1; i < params.size(); i++)
@@ -142,7 +142,7 @@ long double MathExpressions::Mul::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(this, params.size(), 2);
 
     for (long double param : params)
         res *= param;
@@ -160,7 +160,7 @@ long double MathExpressions::Div::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
     std::vector<long double> params;
     EvaluateChildren(node, params, env);
 
-    if (params.size() < 2) throw UnexpectedSubexpressionCount(params.size(), 2);
+    if (params.size() < 2) throw UnexpectedSubexpressionCount(this, params.size(), 2);
 
     long double res = params[0];
     for (size_t i = 1; i < params.size(); i++)
@@ -181,6 +181,8 @@ long double MathExpressions::Pow::Evaluate(const Tree<TokenPtr>::NodePtr& node, 
 {
     std::vector<long double> params;
     EvaluateChildren(node, params, env, 2);
+
+    if (params[1] < 1.0 && params[0] < 0.0) throw NegativeNumberRoot(this);
 
     return powl(params[0], params[1]);
 }
