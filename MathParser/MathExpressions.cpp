@@ -504,7 +504,7 @@ static TokenPtr MET_NumberFactory(const Parser& parser, const std::string& in_ex
 
         if (ch == '.')
         {
-            if (num_dec) throw std::exception();
+            if (num_dec) throw IncorrectlyFormedNumber(cursor);
             else num_dec = true;
         }
 
