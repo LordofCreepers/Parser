@@ -2,7 +2,4 @@ cmake_minimum_required(VERSION 3.8)
 
 project("Parser")
 
-add_library(Parser
-	"ParserBase/Parser.cpp"
-	"MathParser/MathExpressions.cpp"
-)
+add_library(${PROJECT_NAME} "ParserBase/Parser.cpp")
