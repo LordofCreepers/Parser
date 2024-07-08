@@ -9,20 +9,20 @@ class ExpressionError : public std::exception
 class SyntaxError : public ExpressionError
 {
 protected:
-	size_t Column;
+	size_t Character;
 public:
-	SyntaxError(size_t column) : Column(column) {};
+	SyntaxError(size_t character) : Character(character) {};
 
-	virtual size_t GetColumn() const
+	virtual size_t GetCharacter() const
 	{
-		return Column;
+		return Character;
 	}
 };
 
 class UnexpectedToken : public SyntaxError
 {
 public:
-	UnexpectedToken(size_t column) : SyntaxError(column) {};
+	UnexpectedToken(size_t character) : SyntaxError(character) {};
 
 	virtual const char* what() const override
 	{
@@ -31,6 +31,7 @@ public:
 	}
 };
 
+/*
 class IncorrectlyFormedNumber : public SyntaxError
 {
 public:
@@ -168,4 +169,4 @@ public:
 	{
 		return Symbol;
 	}
-};
+}; */
