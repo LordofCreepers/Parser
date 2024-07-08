@@ -1,22 +1,8 @@
 #pragma once
+/*
+#include "Parser.hpp"
 
-#include <memory>
-#include <vector>
-#include "Token.hpp"
-
-class IToken;
-using TokenPtr = std::shared_ptr<IToken>;
-
-template<typename T>
-struct Range
-{
-	typename T::const_iterator Start;
-	typename T::const_iterator End;
-
-	Range(typename T::const_iterator start, typename T::const_iterator end) : Start(start), End(end) {};
-};
-
-class IToken
+class Parser::IToken
 {
 public:
 	virtual bool IsPrecedent(const IToken*) const = 0;
@@ -31,4 +17,4 @@ public:
 		std::vector<TokenPtr>::const_iterator,
 		std::vector<Range<std::vector<TokenPtr>>>&
 	) const = 0;
-};
+}; */
