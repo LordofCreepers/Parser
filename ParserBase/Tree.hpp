@@ -15,9 +15,11 @@ public:
 		T Value;
 		std::vector<NodePtr> Children;
 	};
-protected:
-	std::shared_ptr<Node> Root;
+// protected:
 public:
+	std::shared_ptr<Node> Root;
+/* public:
 	const NodePtr& GetRoot() const { return Root; }
 	NodePtr& RetrieveRoot() { return Root; }
+*/
 };
