@@ -2,30 +2,27 @@
 #include "Parser.hpp"
 #include "../Exceptions/Exceptions.hpp"
 
-void Parser::AddFactory(TokenFactory&& factory)
+/* void Parser::AddFactory(TokenFactory&& factory)
 {
 	TokenFactories.emplace_back(factory);
-}
+} */
 
 void Parser::SubParse(
-	std::vector<TokenPtr>::const_iterator tokens_start, 
-	std::vector<TokenPtr>::const_iterator tokens_end, 
+	Range<std::vector<TokenPtr>> tokens, 
 	Tree<TokenPtr>::NodePtr& ast_node)
 {
-	if (tokens_start == tokens_end) return;
+	if (tokens.Start == tokens.End) return;
 
-	Range<std::vector<TokenPtr>> range = { tokens_start, tokens_end };
-
-	std::vector<TokenPtr>::const_iterator smallest_precedence_token = tokens_end;
+	std::vector<TokenPtr>::const_iterator smallest_precedence_token = tokens.End;
 
 	for (
-		std::vector<TokenPtr>::const_iterator token_it = tokens_start; 
-		token_it != tokens_end; (*token_it)->FindNextToken(range, token_it)
+		std::vector<TokenPtr>::const_iterator token_it = tokens.Start; 
+		token_it != tokens.End; (*token_it)->FindNextToken(tokens, token_it)
 	) {
 		const TokenPtr& token = *token_it;
 
 		if (
-			smallest_precedence_token == tokens_end ||
+			smallest_precedence_token == tokens.End ||
 			!token->IsPrecedent(smallest_precedence_token->get())
 		)
 			smallest_precedence_token = token_it;
@@ -39,17 +36,21 @@ void Parser::SubParse(
 	ast_node->Children.push_back(child_node);
 
 	std::vector<Range<std::vector<TokenPtr>>> partitions;
-	token_ptr->SplitPoints(range, smallest_precedence_token, partitions);
+	token_ptr->SplitPoints(tokens, smallest_precedence_token, partitions);
 
 	for (const Range<std::vector<TokenPtr>>& par_range : partitions)
-		SubParse(par_range.Start, par_range.End, child_node);
+		SubParse(par_range, child_node);
 }
 
-void Parser::Tokenize(const std::string& in_expression, std::vector<TokenPtr>& out_tokens)
-{
+void Parser::Tokenize(
+	const std::vector<TokenFactory>& factories,
+	const std::string& in_expression, 
+	std::vector<TokenPtr>& out_tokens
+) {
 	out_tokens.clear();
 
-	if (in_expression.empty()) throw EmptyExpression();
+	// if (in_expression.empty()) throw EmptyExpression();
+	if (in_expression.empty()) return;
 
 	size_t token_start_pointer = 0;
 
@@ -57,12 +58,11 @@ void Parser::Tokenize(const std::string& in_expression, std::vector<TokenPtr>& o
 	{
 		TokenFactory* factory_ptr = nullptr;
 
-		for (TokenFactory factory : TokenFactories)
+		for (TokenFactory factory : factories)
 		{
-			factory_ptr = &factory;
-
-			if (TokenPtr token = factory(*this, in_expression, token_start_pointer))
+			if (TokenPtr token = factory(in_expression, token_start_pointer))
 			{
+				factory_ptr = &factory;
 				out_tokens.emplace_back(std::move(token));
 				break;
 			}
@@ -74,22 +74,23 @@ void Parser::Tokenize(const std::string& in_expression, std::vector<TokenPtr>& o
 
 void Parser::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
 {
-	if (Tree<TokenPtr>::NodePtr& root_node = ast.RetrieveRoot())
+	if (Tree<TokenPtr>::NodePtr& root_node = ast.Root)
 	{
 		root_node->Value.reset();
 		root_node->Children.clear();
 	}
 	else
-		ast.RetrieveRoot() = std::make_shared<Tree<TokenPtr>::Node>();
+		ast.Root = std::make_shared<Tree<TokenPtr>::Node>();
 
-	SubParse(tokens.cbegin(), tokens.cend(), ast.RetrieveRoot());
+	SubParse(Range<std::vector<TokenPtr>>{ tokens.cbegin(), tokens.cend() }, ast.Root);
 
-	Tree<TokenPtr>::NodePtr& root_node = ast.RetrieveRoot();
+	Tree<TokenPtr>::NodePtr& root_node = ast.Root;
 	if (!root_node || root_node->Children.size() == 0) return;
 
 	root_node = root_node->Children[0];
 }
 
+/* 
 const std::vector<TokenFactory>& Parser::GetTokenFactories() const
 {
 	return TokenFactories;
@@ -107,4 +108,4 @@ void Parser::AddTokenFactory(TokenFactory&& factory)
 	if (!factory) throw InvalidFactory{};
 
 	AddFactory(std::move(factory));
-}
+} */
