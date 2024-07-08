@@ -1,6 +1,6 @@
 #include "Token.hpp"
 #include "Parser.hpp"
-#include "../Exceptions/Exceptions.hpp"
+#include "Exceptions.hpp"
 
 /* void Parser::AddFactory(TokenFactory&& factory)
 {
