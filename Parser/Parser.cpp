@@ -2,11 +2,6 @@
 #include "Parser.hpp"
 #include "Exceptions.hpp"
 
-/* void Parser::AddFactory(TokenFactory&& factory)
-{
-	TokenFactories.emplace_back(factory);
-} */
-
 void Parser::SubParse(
 	Range<std::vector<TokenPtr>> tokens, 
 	Tree<TokenPtr>::NodePtr& ast_node)
@@ -49,7 +44,6 @@ void Parser::Tokenize(
 ) {
 	out_tokens.clear();
 
-	// if (in_expression.empty()) throw EmptyExpression();
 	if (in_expression.empty()) return;
 
 	size_t token_start_pointer = 0;
@@ -89,23 +83,3 @@ void Parser::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
 
 	root_node = root_node->Children[0];
 }
-
-/* 
-const std::vector<TokenFactory>& Parser::GetTokenFactories() const
-{
-	return TokenFactories;
-}
-
-void Parser::AddTokenFactory(const TokenFactory& factory)
-{
-	if (!factory) throw InvalidFactory{};
-
-	AddFactory(TokenFactory(factory));
-}
-
-void Parser::AddTokenFactory(TokenFactory&& factory)
-{
-	if (!factory) throw InvalidFactory{};
-
-	AddFactory(std::move(factory));
-} */

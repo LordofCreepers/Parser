@@ -7,9 +7,6 @@
 #include "Tree.hpp"
 #include "Range.hpp"
 
-// class Parser;
-// using TokenFactory = std::function<TokenPtr (const Parser&, const std::string&, size_t&)>;
-
 class Parser
 {
 public:
@@ -35,10 +32,6 @@ public:
 
 	using TokenPtr = std::shared_ptr<IToken>;
 protected:
-	// std::vector<TokenFactory> TokenFactories;
-
-	// virtual void AddFactory(TokenFactory&&);
-
 	virtual void SubParse(
 		Range<std::vector<TokenPtr>>, 
 		Tree<TokenPtr>::NodePtr&
@@ -46,12 +39,6 @@ protected:
 public:
 	using TokenFactory = std::function<TokenPtr (const std::string&, size_t&)>;
 
-	// virtual void Tokenize(const std::string&, std::vector<TokenPtr>&);
 	virtual void Tokenize(const std::vector<TokenFactory>&, const std::string&, std::vector<TokenPtr>&);
 	virtual void Parse(const std::vector<TokenPtr>&, Tree<TokenPtr>&);
-
-	// virtual const std::vector<TokenFactory>& GetTokenFactories() const;
-
-	// void AddTokenFactory(const TokenFactory&);
-	// void AddTokenFactory(TokenFactory&&);
 };

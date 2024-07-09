@@ -4,9 +4,8 @@
 #include <memory>
 
 template<typename T>
-class Tree
+struct Tree
 {
-public:
 	struct Node;
 	using NodePtr = std::shared_ptr<Node>;
 
@@ -15,11 +14,6 @@ public:
 		T Value;
 		std::vector<NodePtr> Children;
 	};
-// protected:
-public:
+
 	std::shared_ptr<Node> Root;
-/* public:
-	const NodePtr& GetRoot() const { return Root; }
-	NodePtr& RetrieveRoot() { return Root; }
-*/
 };
