@@ -26,7 +26,7 @@ class UnexpectedToken : public SyntaxError
 public:
 	UnexpectedToken(size_t character) : SyntaxError(character) {};
 
-	virtual const char* what() const override
+	virtual const char* what() const noexcept override
 	{
 		return "Unexpected token";
 	}
