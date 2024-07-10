@@ -2,12 +2,15 @@
 
 #include <stdexcept>
 
+// Basic exception for all parsing related errors
 class ExpressionError : public std::exception
 {};
 
+// Basic exception for syntax errors. Thrown mostly on tokenization
 class SyntaxError : public ExpressionError
 {
 protected:
+	// Where along parsed expression error has occured
 	size_t Character;
 public:
 	SyntaxError(size_t character) : Character(character) {};
@@ -25,7 +28,6 @@ public:
 
 	virtual const char* what() const override
 	{
-		static const char err[] = "Unexpected token";
-		return err;
+		return "Unexpected token";
 	}
 };
