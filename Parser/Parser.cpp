@@ -9,7 +9,7 @@ void Parser::SubParse(
 	// This usually means that expression had already been parsed
 	if (tokens.Start == tokens.End) return;
 
-	// Token that is the least precident over all other token (a.k.a., should be at the top of current subtree
+	// Token that is the least precident over all other token (a.k.a., should be at the top of current subtree)
 	std::vector<TokenPtr>::const_iterator smallest_precedence_token = tokens.Start;
 
 	for (
