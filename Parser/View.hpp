@@ -36,4 +36,14 @@ struct View
 		typename T::const_iterator start, 
 		typename T::const_iterator end
 	) : Source(source), Start(start), End(end) {};
+	View(const View& other) : Source(other.Source), Start(other.Start), End(other.End) {};
+
+	View& operator=(const View& other)
+	{
+		Source = other.Source;
+		Start = other.Start;
+		End = other.End;
+
+		return *this;
+	}
 };
