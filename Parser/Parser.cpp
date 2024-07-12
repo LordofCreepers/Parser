@@ -117,7 +117,7 @@ void Parser::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
 		ast.Root = std::make_shared<Tree<TokenPtr>::Node>();
 
 	// Parse the entirety of token array
-	SubParse(View<std::vector<TokenPtr>>{ tokens, tokens.cbegin(), tokens.cend() }, ast.Root);
+	SubParse(View<std::vector<TokenPtr>>{ &tokens, tokens.cbegin(), tokens.cend() }, ast.Root);
 
 	// Gets the root and checks if parsing has provided any result
 	Tree<TokenPtr>::NodePtr& root_node = ast.Root;
