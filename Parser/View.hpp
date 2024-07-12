@@ -27,12 +27,12 @@ SOFTWARE.
 template<typename T>
 struct View
 {
-	const T& Source;
+	const T* Source;
 	typename T::const_iterator Start;
 	typename T::const_iterator End;
 
 	View(
-		const T& source,
+		const T* source,
 		typename T::const_iterator start, 
 		typename T::const_iterator end
 	) : Source(source), Start(start), End(end) {};
