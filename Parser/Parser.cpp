@@ -26,7 +26,7 @@ SOFTWARE.
 #include "Exceptions.hpp"
 
 void Parser::SubParse(
-	Range<std::vector<TokenPtr>> tokens, 
+	View<std::vector<TokenPtr>> tokens, 
 	Tree<TokenPtr>::NodePtr& ast_node
 ) {
 	// If the range is empty, bail out
@@ -59,11 +59,11 @@ void Parser::SubParse(
 	ast_node->Children.push_back(child_node);
 
 	// Let found token determine what could it's child nodes in ast be
-	std::vector<Range<std::vector<TokenPtr>>> partitions;
+	std::vector<View<std::vector<TokenPtr>>> partitions;
 	token_ptr->SplitPoints(tokens, smallest_precedence_token, partitions);
 
 	// Recurrently parse subranges provided by found token
-	for (const Range<std::vector<TokenPtr>>& par_range : partitions)
+	for (const View<std::vector<TokenPtr>>& par_range : partitions)
 		SubParse(par_range, child_node);
 }
 
@@ -117,7 +117,7 @@ void Parser::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
 		ast.Root = std::make_shared<Tree<TokenPtr>::Node>();
 
 	// Parse the entirety of token array
-	SubParse(Range<std::vector<TokenPtr>>{ tokens.cbegin(), tokens.cend() }, ast.Root);
+	SubParse(View<std::vector<TokenPtr>>{ tokens, tokens.cbegin(), tokens.cend() }, ast.Root);
 
 	// Gets the root and checks if parsing has provided any result
 	Tree<TokenPtr>::NodePtr& root_node = ast.Root;

@@ -29,7 +29,7 @@ SOFTWARE.
 #include <memory>
 #include <functional>
 #include "Tree.hpp"
-#include "Range.hpp"
+#include "View.hpp"
 
 // Base class for all parsing operations. Treated a lot like namespace, but contains virtual methods, so it can't be
 class Parser
@@ -54,22 +54,22 @@ public:
 		'token_cursor' is both the position of this token in the list, and the output - next token in the list
 		*/
 		virtual void FindNextToken(
-			Range<std::vector<TokenPtr>> tokens_range,
+			View<std::vector<TokenPtr>> tokens_range,
 			std::vector<TokenPtr>::const_iterator& token_cursor
 		) const = 0;
 
 		// Determines what tokens could be considered 'children' of this token in AST
 		virtual void SplitPoints(
-			Range<std::vector<TokenPtr>> tokens_range,
+			View<std::vector<TokenPtr>> tokens_range,
 			std::vector<TokenPtr>::const_iterator cur_token,
-			std::vector<Range<std::vector<TokenPtr>>>& result_ranges
+			std::vector<View<std::vector<TokenPtr>>>& result_ranges
 		) const = 0;
 	};
 
 protected:
 	// Parses a subrange of vector of tokens
 	virtual void SubParse(
-		Range<std::vector<TokenPtr>> tokens_range, 
+		View<std::vector<TokenPtr>> tokens_range, 
 		Tree<TokenPtr>::NodePtr& cur_node
 	);
 public:

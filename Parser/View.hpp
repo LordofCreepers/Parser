@@ -25,10 +25,15 @@ SOFTWARE.
 #pragma once
 
 template<typename T>
-struct Range
+struct View
 {
+	const T& Source;
 	typename T::const_iterator Start;
 	typename T::const_iterator End;
 
-	Range(typename T::const_iterator start, typename T::const_iterator end) : Start(start), End(end) {};
+	View(
+		const T& source,
+		typename T::const_iterator start, 
+		typename T::const_iterator end
+	) : Source(source), Start(start), End(end) {};
 };
