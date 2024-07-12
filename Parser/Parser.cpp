@@ -10,18 +10,20 @@ void Parser::SubParse(
 	if (tokens.Start == tokens.End) return;
 
 	// Token that is the least precident over all other token (a.k.a., should be at the top of current subtree)
-	std::vector<TokenPtr>::const_iterator smallest_precedence_token = tokens.Start;
+	std::vector<TokenPtr>::const_iterator smallest_precedence_token = tokens.End;
 
 	for (
-		std::vector<TokenPtr>::const_iterator token_it = tokens.Start + 1; 
+		std::vector<TokenPtr>::const_iterator token_it = tokens.Start; 
 		token_it != tokens.End; (*token_it)->FindNextToken(tokens, token_it)
 	) {
 		const TokenPtr& token = *token_it;
 
 		// If current token is not precedent over current smallest precedence token, make it
 		// new smallest precedence token
-		if (!token->IsPrecedent(smallest_precedence_token->get()))
-			smallest_precedence_token = token_it;
+		if (
+			smallest_precedence_token == tokens.End ||
+			!token->IsPrecedent(smallest_precedence_token->get())
+		) smallest_precedence_token = token_it;
 	}
 
 	const TokenPtr& token_ptr = *smallest_precedence_token;
