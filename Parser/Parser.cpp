@@ -25,7 +25,7 @@ SOFTWARE.
 #include "Parser.hpp"
 #include "Exceptions.hpp"
 
-void Parser::SubParse(
+void Parser::Engine::SubParse(
 	View<std::vector<TokenPtr>> tokens, 
 	Tree<TokenPtr>::NodePtr& ast_node
 ) {
@@ -67,7 +67,7 @@ void Parser::SubParse(
 		SubParse(par_range, child_node);
 }
 
-void Parser::Tokenize(
+void Parser::Engine::Tokenize(
 	const std::vector<TokenFactory>& factories,
 	const std::string& in_expression, 
 	std::vector<TokenPtr>& out_tokens
@@ -105,7 +105,7 @@ void Parser::Tokenize(
 	}
 }
 
-void Parser::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
+void Parser::Engine::Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& ast)
 {
 	// Clear output tree
 	if (Tree<TokenPtr>::NodePtr& root_node = ast.Root)

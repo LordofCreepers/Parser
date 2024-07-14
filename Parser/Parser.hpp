@@ -32,9 +32,8 @@ SOFTWARE.
 #include "View.hpp"
 
 // Base class for all parsing operations. Treated a lot like namespace, but contains virtual methods, so it can't be
-class Parser
+namespace Parser
 {
-public:
 	// Basic interface that represents a token object
 	class IToken;
 	// Tokens are always operated on in form of smart pointers to objects that implement IToken interface
@@ -66,24 +65,27 @@ public:
 		) const = 0;
 	};
 
-protected:
-	// Parses a subrange of vector of tokens
-	virtual void SubParse(
-		View<std::vector<TokenPtr>> tokens_range, 
-		Tree<TokenPtr>::NodePtr& cur_node
-	);
-public:
-	/* A function that is responsible for identifying a token at string's position
-	and consuming that substring and generating matching token
-	Signature - TokenPtr (const std::string&, size_t&), where
-	* TokenPtr - Generated token. Should be 'nullptr' if factory didn't match it's token
-	* const std::string& - Expression parsed
-	* size_t& - Cursor. If factory matches a token, it should advance this to the end of that token
-	*/
-	using TokenFactory = std::function<TokenPtr (const std::string&, size_t&)>;
+	class Engine
+	{
+	protected:
+		// Parses a subrange of vector of tokens
+		virtual void SubParse(
+			View<std::vector<TokenPtr>> tokens_range,
+			Tree<TokenPtr>::NodePtr& cur_node
+		);
+	public:
+		/* A function that is responsible for identifying a token at string's position
+		and consuming that substring and generating matching token
+		Signature - TokenPtr (const std::string&, size_t&), where
+		* TokenPtr - Generated token. Should be 'nullptr' if factory didn't match it's token
+		* const std::string& - Expression parsed
+		* size_t& - Cursor. If factory matches a token, it should advance this to the end of that token
+		*/
+		using TokenFactory = std::function<TokenPtr(const std::string&, size_t&)>;
 
-	// Splits expression into array of tokens in according to provided token factories
-	virtual void Tokenize(const std::vector<TokenFactory>&, const std::string&, std::vector<TokenPtr>&);
-	// Builds abstract syntax tree out of array of tokens
-	virtual void Parse(const std::vector<TokenPtr>&, Tree<TokenPtr>&);
+		// Splits expression into array of tokens in according to provided token factories
+		virtual void Tokenize(const std::vector<TokenFactory>&, const std::string&, std::vector<TokenPtr>&);
+		// Builds abstract syntax tree out of array of tokens
+		virtual void Parse(const std::vector<TokenPtr>&, Tree<TokenPtr>&);
+	};
 };
