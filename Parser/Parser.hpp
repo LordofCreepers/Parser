@@ -65,6 +65,15 @@ namespace Parser
 		) const = 0;
 	};
 
+	/* A function that is responsible for identifying a token at string's position
+	and consuming that substring and generating matching token
+	Signature - TokenPtr (const std::string&, size_t&), where
+	* TokenPtr - Generated token. Should be 'nullptr' if factory didn't match it's token
+	* const std::string& - Expression parsed
+	* size_t& - Cursor. If factory matches a token, it should advance this to the end of that token
+	*/
+	using TokenFactory = std::function<TokenPtr(const std::string&, size_t&)>;
+
 	class Engine
 	{
 	protected:
@@ -74,15 +83,6 @@ namespace Parser
 			Tree<TokenPtr>::NodePtr& cur_node
 		);
 	public:
-		/* A function that is responsible for identifying a token at string's position
-		and consuming that substring and generating matching token
-		Signature - TokenPtr (const std::string&, size_t&), where
-		* TokenPtr - Generated token. Should be 'nullptr' if factory didn't match it's token
-		* const std::string& - Expression parsed
-		* size_t& - Cursor. If factory matches a token, it should advance this to the end of that token
-		*/
-		using TokenFactory = std::function<TokenPtr(const std::string&, size_t&)>;
-
 		// Splits expression into array of tokens in according to provided token factories
 		virtual void Tokenize(const std::vector<TokenFactory>&, const std::string&, std::vector<TokenPtr>&);
 		// Builds abstract syntax tree out of array of tokens
