@@ -31,7 +31,6 @@ SOFTWARE.
 #include "Tree.hpp"
 #include "View.hpp"
 
-// Base class for all parsing operations. Treated a lot like namespace, but contains virtual methods, so it can't be
 namespace Parser
 {
 	// Basic interface that represents a token object
@@ -63,6 +62,9 @@ namespace Parser
 			std::vector<TokenPtr>::const_iterator cur_token,
 			std::vector<View<std::vector<TokenPtr>>>& result_ranges
 		) const = 0;
+
+		virtual void Stringify(View<std::vector<TokenPtr>> token_range, std::string& out_string) const = 0;
+		virtual void Stringify(const Tree<TokenPtr>::Node* cur_node, std::string& out_string) const = 0;
 	};
 
 	/* A function that is responsible for identifying a token at string's position
@@ -84,8 +86,16 @@ namespace Parser
 		);
 	public:
 		// Splits expression into array of tokens in according to provided token factories
-		virtual void Tokenize(const std::vector<TokenFactory>&, const std::string&, std::vector<TokenPtr>&);
+		virtual void Tokenize(
+			const std::vector<TokenFactory>& token_factories, 
+			const std::string& in_expression, 
+			std::vector<TokenPtr>& out_tokens);
 		// Builds abstract syntax tree out of array of tokens
-		virtual void Parse(const std::vector<TokenPtr>&, Tree<TokenPtr>&);
+		virtual void Parse(const std::vector<TokenPtr>& tokens, Tree<TokenPtr>& out_ast);
+
+		// Attempts to convert an array of generated tokens back to it's source expression
+		virtual void Stringify(const std::vector<TokenPtr>& token_array, std::string& out_string);
+		// Attempts to convert an abstract syntax tree back to it's source expression
+		virtual void Stringify(const Tree<TokenPtr>& token_ast, std::string& out_string);
 	};
 };

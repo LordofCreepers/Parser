@@ -55,3 +55,53 @@ public:
 		return "Unexpected token";
 	}
 };
+
+class StringificationError : public ExpressionError
+{};
+
+class TreeStringificationError
+{
+protected:
+	const Tree<Parser::TokenPtr>& AssociatedTree;
+public:
+	TreeStringificationError(const Tree<Parser::TokenPtr>& tree) : AssociatedTree(tree) {};
+
+	virtual const Tree<Parser::TokenPtr>& GetTree() const
+	{
+		return AssociatedTree;
+	}
+};
+
+class ArrayStringificationError
+{
+protected:
+	const std::vector<Parser::TokenPtr>& AssociatedArray;
+public:
+	ArrayStringificationError(const std::vector<Parser::TokenPtr>& arr) : AssociatedArray(arr) {};
+
+	virtual const std::vector<Parser::TokenPtr>& GetArray() const
+	{
+		return AssociatedArray;
+	}
+};
+
+class EmptyToken : public StringificationError
+{
+public:
+	virtual const char* what() const noexcept override
+	{
+		return "Empty token";
+	}
+};
+
+class TreeEmptyToken : public TreeStringificationError, public EmptyToken
+{
+public:
+	TreeEmptyToken(const Tree<Parser::TokenPtr>& tree) : TreeStringificationError(tree) {};
+};
+
+class ArrayEmptyToken : public ArrayStringificationError, public EmptyToken
+{
+public:
+	ArrayEmptyToken(const std::vector<Parser::TokenPtr>& arr) : ArrayStringificationError(arr) {};
+};
