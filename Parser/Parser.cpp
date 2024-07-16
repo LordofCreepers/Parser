@@ -56,6 +56,7 @@ void Parser::Engine::SubParse(
 
 	// Makes found token a new child node of current subtree
 	auto child_node = std::make_shared<Tree<TokenPtr>::Node>();
+	child_node->Parent = ast_node;
 	child_node->Value = token_ptr;
 
 	ast_node->Children.push_back(child_node);

@@ -27,6 +27,8 @@ SOFTWARE.
 #include <vector>
 #include <memory>
 
+// Tree. A structure used widely across the parser and is the end result of it
+
 template<typename T>
 struct Tree
 {
@@ -36,8 +38,9 @@ struct Tree
 	struct Node
 	{
 		T Value;
+		std::weak_ptr<Node> Parent;
 		std::vector<NodePtr> Children;
 	};
 
-	std::shared_ptr<Node> Root;
+	NodePtr Root;
 };
