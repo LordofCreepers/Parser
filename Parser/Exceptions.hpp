@@ -26,6 +26,8 @@ SOFTWARE.
 
 #include <stdexcept>
 
+// This is a collection of all exceptions used by the parser
+
 // Basic exception for all parsing related errors
 class ExpressionError : public std::exception
 {};
@@ -56,7 +58,8 @@ public:
 	}
 };
 
-class StringificationError : public ExpressionError
+// OBSOLETE
+/* class StringificationError : public ExpressionError
 {};
 
 class TreeStringificationError
@@ -104,4 +107,4 @@ class ArrayEmptyToken : public ArrayStringificationError, public EmptyToken
 {
 public:
 	ArrayEmptyToken(const std::vector<Parser::TokenPtr>& arr) : ArrayStringificationError(arr) {};
-};
+}; */
