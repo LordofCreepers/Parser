@@ -70,6 +70,16 @@ void Parser::Engine::SubParse(
 		SubParse(par_range, child_node);
 }
 
+void Parser::Engine::SubBackpatch(Tree<TokenPtr>& tree, Tree<TokenPtr>::NodePtr cur_node)
+{
+	// Delegates backpatching to the token itself
+	cur_node->Value->Backpatch(tree, *cur_node);
+
+	// Backpatches all the child nodes in the tree
+	for (Tree<TokenPtr>::NodePtr child_node : cur_node->Children)
+		SubBackpatch(tree, child_node);
+}
+
 void Parser::Engine::Tokenize(
 	const std::vector<TokenFactory>& factories,
 	const std::string& in_expression, 
@@ -161,4 +171,17 @@ void Parser::Engine::Stringify(const Tree<TokenPtr>& token_ast, std::string& out
 	// Delegates tokens to generate the expression themselves
 	// It is expected that each token recursively stringifies it's children
 	token_ast.Root->Value->Stringify(token_ast, *token_ast.Root, out_string);
+}
+
+void Parser::Engine::Backpatch(std::vector<TokenPtr>& tokens)
+{
+	for (std::vector<TokenPtr>::iterator it = tokens.begin(); it != tokens.end(); ++it)
+		// Delegates backpatching to tokens themselves
+		(*it)->Backpatch(tokens, it);
+}
+
+void Parser::Engine::Backpatch(Tree<TokenPtr>& tree)
+{
+	// Starts backpatching from the root
+	SubBackpatch(tree, tree.Root);
 }

@@ -202,6 +202,27 @@ namespace Parser
 			const Tree<TokenPtr>::Node& cur_node, 
 			std::string& out_string
 		) const = 0;
+
+		/// <summary>
+		/// Lets the token to backpatch itself - apply corrections that require specific context
+		/// (in this case, other tokens already formed)
+		/// </summary>
+		/// <param name="token_range">- array of all the tokens formed at this stage</param>
+		/// <param name="cur_token">- this token's position in the array</param>
+		virtual void Backpatch(
+			std::vector<TokenPtr>& token_range,
+			std::vector<TokenPtr>::iterator cur_token
+		) = 0;
+		/// <summary>
+		/// Lets the token to backpatch itself - apply corrections that require specific context
+		/// (in this case, other tokens already formed)
+		/// </summary>
+		/// <param name="tree">- tree with all of the tojens formed at this stage</param>
+		/// <param name="cur_node">- this token's position in the tree</param>
+		virtual void Backpatch(
+			Tree<TokenPtr>& tree,
+			Tree<TokenPtr>::Node& cur_node
+		) = 0;
 	};
 
 	/* A callable object that is responsible for identifying any token at the string's cursor,
@@ -225,6 +246,16 @@ namespace Parser
 		virtual void SubParse(
 			View<std::vector<TokenPtr>> tokens_range,
 			Tree<TokenPtr>::NodePtr& cur_node
+		);
+
+		/// <summary>
+		/// Backpatches a token assigned to cur_node and every child node ones
+		/// </summary>
+		/// <param name="tree">- tree token resides in</param>
+		/// <param name="cur_node">- token's node in the tree</param>
+		virtual void SubBackpatch(
+			Tree<TokenPtr>& tree,
+			Tree<TokenPtr>::NodePtr cur_node
 		);
 	public:
 		/// <summary>
@@ -256,5 +287,16 @@ namespace Parser
 		/// <param name="token_ast">- abstract syntax tree</param>
 		/// <param name="out_string">- (out) rebuilt expression</param>
 		virtual void Stringify(const Tree<TokenPtr>& token_ast, std::string& out_string);
+
+		/// <summary>
+		/// Backpatches every token in an array 
+		/// </summary>
+		/// <param name="tokens">- array of tokens</param>
+		virtual void Backpatch(std::vector<TokenPtr>& tokens);
+		/// <summary>
+		/// Backpatches every token in a tree
+		/// </summary>
+		/// <param name="tree">- tree of tokens</param>
+		virtual void Backpatch(Tree<TokenPtr>& tree);
 	};
 };
